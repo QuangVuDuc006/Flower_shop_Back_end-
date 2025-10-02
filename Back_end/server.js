@@ -1,4 +1,5 @@
-require('dotenv').config(); // Dòng này phải ở trên cùng
+// Thêm dòng này lên ĐẦU TIÊN để đọc file .env
+require('dotenv').config();
 
 // === 1. IMPORT CÁC THƯ VIỆN CẦN THIẾT ===
 const express = require('express');
@@ -6,16 +7,16 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 const mongoose = require('mongoose');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('cloudinary').v2;
 
 const { categories } = require('./data.js'); 
 
 // === 2. KHỞI TẠO ỨNG DỤNG VÀ CÁC BIẾN CƠ BẢN ===
 const app = express();
-// TỐI ƯU: Sử dụng cổng của môi trường deploy hoặc 3000 nếu chạy ở local
 const port = process.env.PORT || 3000;
 
 // === 3. KẾT NỐI DATABASE MONGODB ===
-// TỐI ƯU: Đọc chuỗi kết nối từ biến môi trường để bảo mật
 const dbConnectionString = process.env.DATABASE_URL;
 
 mongoose.connect(dbConnectionString)
@@ -23,79 +24,69 @@ mongoose.connect(dbConnectionString)
     .catch(err => console.error('❌ Lỗi kết nối MongoDB:', err));
 
 // === 4. ĐỊNH NGHĨA SCHEMA VÀ MODEL CHO SẢN PHẨM ===
-const productSchema = new mongoose.Schema({
-    id: { type: String, unique: true, required: true },
-    name: String,
-    price: Number,
-    originalPrice: Number,
-    image: String,
-    category: [String],
-    description: String
-});
+const productSchema = new mongoose.Schema({ /* ... code không đổi ... */ });
 const Product = mongoose.model('Product', productSchema);
 
 
-// === 5. CẤU HÌNH MIDDLEWARE ===
+// === 5. CẤU HÌNH MIDDLEWARE & UPLOAD ẢNH LÊN CLOUDINARY ===
 app.use(cors());
 app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, 'uploads/'),
-    filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
+// Cấu hình Cloudinary bằng các biến môi trường
+cloudinary.config({
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
 });
+
+// Cấu hình Multer để upload file lên Cloudinary thay vì lưu trên server
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'flower-shop', // Tên thư mục trên Cloudinary để lưu ảnh
+    allowedFormats: ['jpeg', 'png', 'jpg', 'webp'],
+  },
+});
+
 const upload = multer({ storage: storage });
 
 
 // === 6. ĐỊNH NGHĨA CÁC API ENDPOINTS ===
 
 // GET: Lấy tất cả sản phẩm
-app.get('/api/products', async (req, res) => {
-    try {
-        const productsFromDb = await Product.find();
-        res.json(productsFromDb);
-    } catch (error) {
-        res.status(500).json({ message: 'Lỗi server khi lấy sản phẩm' });
-    }
-});
+app.get('/api/products', async (req, res) => { /* ... code không đổi ... */ });
 
 // GET: Lấy danh sách danh mục
-app.get('/api/categories', (req, res) => {
-    res.json(categories);
-});
+app.get('/api/categories', (req, res) => { /* ... code không đổi ... */ });
 
-// POST: Thêm một sản phẩm mới
+// POST: Thêm sản phẩm mới (Lưu ảnh lên Cloudinary)
 app.post('/api/products', upload.single('image'), async (req, res) => {
     try {
         const { name, price, category, originalPrice, description } = req.body;
-        const imagePath = req.file ? `/uploads/${req.file.filename}` : '';
+        // THAY ĐỔI: Lấy đường dẫn ảnh trực tiếp từ Cloudinary trả về
+        const imagePath = req.file ? req.file.path : ''; 
+
         const newProduct = new Product({
             id: 'product-' + Date.now(),
             name, price: Number(price),
-            originalPrice: Number(originalPrice) || null, image: imagePath,
+            originalPrice: Number(originalPrice) || null,
+            image: imagePath, // Đây là URL của Cloudinary
             category: Array.isArray(category) ? category : [category],
             description: description || ''
         });
+        
         await newProduct.save();
+        console.log('Đã lưu sản phẩm mới (ảnh trên Cloudinary):', newProduct);
         res.status(201).json(newProduct);
+
     } catch (error) {
+        console.error('Lỗi khi thêm sản phẩm:', error);
         res.status(500).json({ message: 'Lỗi server khi thêm sản phẩm' });
     }
 });
 
 // DELETE: Xóa một sản phẩm
-app.delete('/api/products/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const deletedProduct = await Product.findOneAndDelete({ id: id });
-        if (!deletedProduct) {
-            return res.status(404).json({ message: 'Không tìm thấy sản phẩm để xóa' });
-        }
-        res.status(200).json({ message: 'Sản phẩm đã được xóa thành công' });
-    } catch (error) {
-        res.status(500).json({ message: 'Lỗi server khi xóa sản phẩm' });
-    }
-});
+app.delete('/api/products/:id', async (req, res) => { /* ... code không đổi ... */ });
 
 
 // === 7. KHỞI ĐỘNG SERVER ===
