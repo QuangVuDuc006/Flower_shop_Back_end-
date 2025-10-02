@@ -1,0 +1,27 @@
+const categories = [
+    { id: 'hoa-tuoi', name: 'Hoa Tươi' },
+    { id: 'hoa-su-kien', name: 'Hoa Sự Kiện' },
+    { id: 'qua-tang', name: 'Quà Tặng' },
+    { id: 'hoa-qua', name: 'Hoa Quả' },
+    { id: 'chu-de', name: 'Chủ Đề' },
+    { id: 'thiet-ke', name: 'Thiết Kế' },
+    { id: 'qua-tang-giam-sau', name: 'Quà Tặng Giảm Sâu' },
+    { id: 'hoa-hong', name: 'Hoa Hồng' },
+    { id: 'hoa-huong-duong', name: 'Hoa Hướng Dương' },
+    { id: 'hoa-tulip', name: 'Hoa Tulip' },
+    { id: 'hoa-sinh-nhat', name: 'Hoa Sinh Nhật' },
+    { id: 'hoa-khai-truong', name: 'Hoa Khai Trương' },
+    { id: 'hoa-cuoi', name: 'Hoa Cưới' },
+    { id: 'hoa-chia-buon', name: 'Hoa Chia Buồn' },
+    { id: 'gau-bong', name: 'Gấu Bông' },
+    { id: 'socola', name: 'Sô-cô-la' },
+    { id: 'banh-kem', name: 'Bánh Kem' },
+    { id: 'gio-hoa-qua', name: 'Giỏ Hoa Quả' },
+    { id: 'chu-de-lang-man', name: 'Chủ đề Lãng mạn' },
+    { id: 'chu-de-sang-trong', name: 'Chủ đề Sang trọng' },
+    { id: 'thiet-ke-bo-hoa', name: 'Thiết kế Bó hoa' },
+    { id: 'thiet-ke-hop-hoa', name: 'Thiết kế Hộp hoa' },
+    { id: 'thiet-ke-lang-hoa', name: 'Thiết kế Lẵng hoa' },
+];
+
+module.exports = { categories };
